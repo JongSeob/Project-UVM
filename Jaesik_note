@@ -1,0 +1,3 @@
+DAY 1
+각 class 가 Q 로 등록되기 때문에 run_phase 시 가장 먼저 등록된 test 의 raise_objection 이 먼저 실행된다
+part 2 에서 드라이버는 그저 같은 행동을 반복하고 있으며 이 테스트를 언제 끝낼지는 온전히 my_test 의 run_phase 에 달려있다.
