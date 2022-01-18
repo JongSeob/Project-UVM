@@ -248,4 +248,21 @@ simulation result
 # KERNEL: UVM_INFO :   11
 # KERNEL: UVM_WARNING :    0
 # KERNEL: UVM_ERROR :    0
+
+     sequence        sequencer         driver            DUT
+  |============|
+  |start_item()| ->               |===============|
+  |            | <------------ <- |get_next_item()|
+  |============|                  |               |
+  |============|                  |               |
+  |randomize   |                  |               |
+  |============|                  |               |
+  |============|                  |               |
+  |finish_item |->--------------->|               |
+  |            |                  |===============|
+  |            |                             drive -->
+  |            |                  |===============|
+  |            |<---------------<-|  item_done    |
+  |            |                  |===============|
+  |============|
 */
