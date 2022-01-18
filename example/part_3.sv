@@ -34,42 +34,24 @@ package my_pkg;
     rand bit cmd;
     rand int addr;
     rand int data;
-    
+
+    // addr, data에게 constraint를 줌 
     constraint c_addr { addr >= 0; addr < 256; }
     constraint c_data { data >= 0; data < 256; }
     
+    // uvm_sequence_item 변수 초기화
     function new (string name = "");
       super.new(name);
     endfunction
     
-    function string convert2string;
-      return $sformatf("cmd=%b, addr=%0d, data=%0d", cmd, addr, data);
-    endfunction
-
-    function void do_copy(uvm_object rhs);
-      my_transaction tx;
-      $cast(tx, rhs);
-      cmd  = tx.cmd;
-      addr = tx.addr;
-      data = tx.data;
-    endfunction
-    
-    function bit do_compare(uvm_object rhs, uvm_comparer comparer);
-      my_transaction tx;
-      bit status = 1;
-      $cast(tx, rhs);
-      status &= (cmd  == tx.cmd);
-      status &= (addr == tx.addr);
-      status &= (data == tx.data);
-      return status;
-    endfunction
-
   endclass: my_transaction
 
-
+  // 보통 sequencer는 매우 간단한 형태를 갖는다.
+  // sequencer에서 특별한 작을을 해야 하는 경우가 아니라면 아래처럼 한 줄로 표현 가능하다.
+  // uvm_sequence_item 을 my_transaction 으로 define 한 uvm_sequncer 를 my_sequencer 로 사용하겠다
   typedef uvm_sequencer #(my_transaction) my_sequencer;
 
-
+  // uvm_sequence_item 을 my_transaction 으로 define
   class my_sequence extends uvm_sequence #(my_transaction);
   
     `uvm_object_utils(my_sequence)
@@ -82,13 +64,19 @@ package my_pkg;
       if (starting_phase != null)
         starting_phase.raise_objection(this);
 
+  // sequence에서 sequence item을 driver로 보내기 위해 start_item 이라는 method를 사용한다.
       repeat(8)
       begin
         req = my_transaction::type_id::create("req");
         start_item(req);
+        //(uvm_sequence_base.svh) virtual task start_item (uvm_sequence_item item,
+
         if( !req.randomize() )
           `uvm_error("", "Randomize failed")
+
+        // finish_item을 통해 driver와의 communication을 끝낸다.
         finish_item(req);
+        //(uvm_sequence_base.svh) virtual task finish_item (uvm_sequence_item item,
       end
       
       if (starting_phase != null)
@@ -117,7 +105,9 @@ package my_pkg;
     task run_phase(uvm_phase phase);
       forever
       begin
+        // sequencer가 보내주는 transaction이 있는지 기다린다.
         seq_item_port.get_next_item(req);
+        //(uvm_sequencer.svh )
 
         // Wiggle pins of DUT
         @(posedge dut_vi.clock);
@@ -125,6 +115,7 @@ package my_pkg;
         dut_vi.addr = req.addr;
         dut_vi.data = req.data;
         
+        // DUT에 driving이 끝나면 item_done을 sequencer에 보낸다.
         seq_item_port.item_done();
       end
     endtask
@@ -148,6 +139,7 @@ package my_pkg;
       m_driv = my_driver   ::type_id::create("m_driv", this);
     endfunction
     
+    // sequencer와 driver를 연결한다.
     function void connect_phase(uvm_phase phase);
       m_driv.seq_item_port.connect( m_seqr.seq_item_export );
     endfunction
@@ -160,6 +152,7 @@ package my_pkg;
     `uvm_component_utils(my_test)
     
     my_env m_env;
+    my_sequence seq;
     
     function new(string name, uvm_component parent);
       super.new(name, parent);
@@ -167,15 +160,16 @@ package my_pkg;
     
     function void build_phase(uvm_phase phase);
       m_env = my_env::type_id::create("m_env", this);
+      seq = my_sequence::type_id::create("seq");
     endfunction
     
     task run_phase(uvm_phase phase);
-      my_sequence seq;
-      seq = my_sequence::type_id::create("seq");
       if( !seq.randomize() ) 
         `uvm_error("", "Randomize failed")
       seq.starting_phase = phase;
+      // sequencer에 원하는 sequence를 start 시킨다.
       seq.start( m_env.m_seqr );
+      //(uvm_sequence_base.svh) virtual task start (uvm_sequencer_base sequencer,
     endtask
      
   endclass: my_test
@@ -216,9 +210,9 @@ endmodule: top
 interface dut_if;
 
   logic clock, reset;
-  logic cmd;
-  logic [7:0] addr;
-  logic [7:0] data;
+  logic cmd=0;
+  logic [7:0] addr=0;
+  logic [7:0] data=0;
 
 endinterface
 
@@ -235,3 +229,23 @@ module dut(dut_if dif);
   
 endmodule      
       
+/*
+simulation result
+# KERNEL: UVM_INFO @ 0: reporter [RNTST] Running test my_test...
+# KERNEL: UVM_INFO /home/runner/testbench.sv(214) @ 5: reporter [] DUT received cmd=0, addr=  0, data=  0
+# KERNEL: UVM_INFO /home/runner/testbench.sv(214) @ 15: reporter [] DUT received cmd=1, addr=119, data= 62
+# KERNEL: UVM_INFO /home/runner/testbench.sv(214) @ 25: reporter [] DUT received cmd=0, addr=174, data=114
+# KERNEL: UVM_INFO /home/runner/testbench.sv(214) @ 35: reporter [] DUT received cmd=0, addr= 27, data=219
+# KERNEL: UVM_INFO /home/runner/testbench.sv(214) @ 45: reporter [] DUT received cmd=1, addr=190, data=121
+# KERNEL: UVM_INFO /home/runner/testbench.sv(214) @ 55: reporter [] DUT received cmd=1, addr=152, data= 75
+# KERNEL: UVM_INFO /home/runner/testbench.sv(214) @ 65: reporter [] DUT received cmd=0, addr=169, data= 81
+# KERNEL: UVM_INFO /home/runner/testbench.sv(214) @ 75: reporter [] DUT received cmd=0, addr=240, data=140
+# KERNEL: UVM_INFO /home/build/vlib1/vlib/uvm-1.2/src/base/uvm_objection.svh(1271) @ 75: reporter [TEST_DONE] 'run' phase is ready to proceed to the 'extract' phase
+# KERNEL: UVM_INFO /home/build/vlib1/vlib/uvm-1.2/src/base/uvm_report_server.svh(869) @ 75: reporter [UVM/REPORT/SERVER] 
+# KERNEL: --- UVM Report Summary ---
+# KERNEL: 
+# KERNEL: ** Report counts by severity
+# KERNEL: UVM_INFO :   11
+# KERNEL: UVM_WARNING :    0
+# KERNEL: UVM_ERROR :    0
+*/
