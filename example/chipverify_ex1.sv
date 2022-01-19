@@ -1,68 +1,13 @@
-// Code your design here
-// Code your testbench here
-// or browse Examples
+`include "uvm_macros.svh"
 
-//Sequence Item
+package my_pkg;
+
+import uvm_pkg::*;
 
 `define ADDR_WIDTH  8
 `define DATA_WIDTH  16
 `define DEPTH		 256
 `define RESET_VAL	  16'h1234
-module tb;
-  import uvm_pkg::*;
-  bit clk;
-  
-  always #10 clk = ~clk;
-  reg_if _if (clk);
-  
-  reg_ctrl u0 (
-    .clk(clk),
-    .addr(_if.addr),
-    .rstn(_if.rstn),
-    .sel(_if.sel),
-    .wr(_if.wr),
-    .wdata(_if.wdata),
-    .rdata(_if.rdata),
-    .ready(_if.ready)
-  );
-  
-  initial begin
-    //new_test t0;
-    uvm_config_db #(virtual reg_if)::set(null, "uvm_test_top", "reg_vif", _if);
-    run_test("test");
-    /*
-    clk <= 0;
-    _if.rstn <= 0;
-    _if.sel <= 0;
-    #20 _if.rstn <= 1;
-
-
-   // t0 = new;
-   // t0.e0.vif = _if;
-   // t0.run();
-    
-    #200 $finish;
-    */
-  end
-  
-  initial begin
-    $dumpvars;
-    $dumpfile("dump.vcd");
-  end
-endmodule
-
-
-
-interface reg_if (input bit clk);
-  logic 		rstn;
-  logic [7:0] 	addr;
-  logic [15:0] 	wdata;
-  logic [15:0] 	rdata;
-  logic			wr;
-  logic			sel;
-  logic			ready;
-endinterface
-
 
 class Reg_item extends uvm_sequence_item;
   rand bit [`ADDR_WIDTH-1 :0]	addr;
@@ -87,6 +32,32 @@ class Reg_item extends uvm_sequence_item;
   
 endclass
 
+typedef uvm_sequencer #(Reg_item) my_sequencer;
+
+class gen_item_seq extends uvm_sequence #(Reg_item);
+  `uvm_object_utils(gen_item_seq)
+  function new(string name = "gen_item_seq");
+    super.new(name);
+  endfunction
+  
+  rand int num;
+  
+  constraint c1 {soft num inside {[2:5]}; }
+  
+  virtual task body();
+    `uvm_info("SEQ", $sformatf("DBG P1"), UVM_LOW)
+    for(int i=0; i< num; i++) begin
+      Reg_item m_item = Reg_item::type_id::create("m_item");
+      start_item(m_item);
+      m_item.randomize();
+      `uvm_info("SEQ", $sformatf("Generate new item: "), UVM_LOW)
+      m_item.print();
+      finish_item(m_item);
+    end
+    `uvm_info("SEQ", $sformatf("Done generation of %0d items", num), UVM_LOW)
+  endtask
+endclass
+
 class Driver extends uvm_driver #(Reg_item);
   `uvm_component_utils(Driver)
 
@@ -102,8 +73,6 @@ class Driver extends uvm_driver #(Reg_item);
       `uvm_fatal("DRV", "Could not get vif")
     end
   endfunction
-
-
 
   virtual task run_phase(uvm_phase phase);
     super.run_phase(phase);
@@ -242,8 +211,6 @@ class scoreboard extends uvm_scoreboard;
     end
 
   endfunction
-
-
 endclass
 
 class Env extends uvm_env;
@@ -265,30 +232,6 @@ class Env extends uvm_env;
     super.connect_phase(phase);
     a0.m0.mon_analysis_port.connect(sb0.m_analysis_imp);
   endfunction
-endclass
-
-class gen_item_seq extends uvm_sequence;
-  `uvm_object_utils(gen_item_seq)
-  function new(string name = "gen_item_seq");
-    super.new(name);
-  endfunction
-  
-  rand int num;
-  
-  constraint c1 {soft num inside {[2:5]}; }
-  
-  virtual task body();
-    `uvm_info("SEQ", $sformatf("DBG P1"), UVM_LOW)
-    for(int i=0; i< num; i++) begin
-      Reg_item m_item = Reg_item::type_id::create("m_item");
-      start_item(m_item);
-      m_item.randomize();
-      `uvm_info("SEQ", $sformatf("Generate new item: "), UVM_LOW)
-      m_item.print();
-      finish_item(m_item);
-    end
-    `uvm_info("SEQ", $sformatf("Done generation of %0d items", num), UVM_LOW)
-  endtask
 endclass
 
 
@@ -327,3 +270,47 @@ class test extends uvm_test;
     repeat(10) @ (posedge vif.clk);
   endtask
 endclass
+
+endpackage: my_pkg
+
+module tb;
+  import uvm_pkg::*;
+  import my_pkg::*;
+  
+  bit clk;
+  
+  always #10 clk = ~clk;
+  reg_if _if (clk);
+  
+  reg_ctrl u0 (
+    .clk(clk),
+    .addr(_if.addr),
+    .rstn(_if.rstn),
+    .sel(_if.sel),
+    .wr(_if.wr),
+    .wdata(_if.wdata),
+    .rdata(_if.rdata),
+    .ready(_if.ready)
+  );
+  
+  initial begin
+    //new_test t0;
+    uvm_config_db #(virtual reg_if)::set(null, "uvm_test_top", "reg_vif", _if);
+    run_test("test");
+  end
+  
+  initial begin
+    $dumpvars;
+    $dumpfile("dump.vcd");
+  end
+endmodule
+
+interface reg_if (input bit clk);
+  logic 		rstn;
+  logic [7:0] 	addr;
+  logic [15:0] 	wdata;
+  logic [15:0] 	rdata;
+  logic			wr;
+  logic			sel;
+  logic			ready;
+endinterface
