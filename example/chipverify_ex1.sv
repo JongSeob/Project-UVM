@@ -9,12 +9,24 @@ import uvm_pkg::*;
 `define DEPTH		 256
 `define RESET_VAL	  16'h1234
 
+////////////////////////////////////////////////////////////////////////
+// uvm_sequence_item
+////////////////////////////////////////////////////////////////////////
 class Reg_item extends uvm_sequence_item;
   rand bit [`ADDR_WIDTH-1 :0]	addr;
   rand bit [`DATA_WIDTH-1 :0]	wdata;
   rand bit						wr;
   bit [`DATA_WIDTH-1 :0]		rdata;
-  
+
+  // uvm_object 또는 uvm_transaction 을 상속 받은 모든 class는 
+  // uvm_object_utils를 사용하여 factory에 등록해야 한다.
+  // Each `uvm_field_* macro has at least two arguments: ARG and FLAG.
+  // ARG is the instance name of the variable and FLAG is used to control the field usage in core utilities operation.
+  // By default, FLAG is set to UVM_ALL_ON
+  //
+  // UVM_ALL_ON  : Set all operation
+  // UVM_DEFAULT : Use the default flag settings
+  // 차이점?
   `uvm_object_utils_begin(Reg_item)
  	 `uvm_field_int (addr, UVM_DEFAULT)
  	 `uvm_field_int (wdata, UVM_DEFAULT)
@@ -32,41 +44,69 @@ class Reg_item extends uvm_sequence_item;
   
 endclass
 
+////////////////////////////////////////////////////////////////////////
+// sequencer 
+////////////////////////////////////////////////////////////////////////
+// Reg_item이 define된 uvm_sequencer를 my_sequncer로 사용하겠다
 typedef uvm_sequencer #(Reg_item) my_sequencer;
 
+////////////////////////////////////////////////////////////////////////
+// uvm_sequence
+////////////////////////////////////////////////////////////////////////
 class gen_item_seq extends uvm_sequence #(Reg_item);
+
+// class를 factory에 등록
+// factory란?
   `uvm_object_utils(gen_item_seq)
+
+// class object를 생성한다
+// parent class 변수를 초기화 한다
   function new(string name = "gen_item_seq");
     super.new(name);
   endfunction
   
   rand int num;
   
-  constraint c1 {soft num inside {[2:5]}; }
+  constraint c1 {soft num inside {[2:5]}; 다
   
   virtual task body();
     `uvm_info("SEQ", $sformatf("DBG P1"), UVM_LOW)
     for(int i=0; i< num; i++) begin
+      // uvm_sequence_item를 상속받은 Reg_item을 m_item으로 사용하겠다
       Reg_item m_item = Reg_item::type_id::create("m_item");
+      // m_item을 driver에 보낸다
       start_item(m_item);
+      // driver에게 response를 받으면 radomize를 한다
       m_item.randomize();
       `uvm_info("SEQ", $sformatf("Generate new item: "), UVM_LOW)
+      // m_item의 내용을 출력한다
       m_item.print();
+      // driver의 driving 동작시키기 위해 finish_item을 수행한다
       finish_item(m_item);
-    end
+      // driver로 부터 response를 받으면 finish_item은 종료된다
     `uvm_info("SEQ", $sformatf("Done generation of %0d items", num), UVM_LOW)
   endtask
 endclass
 
+////////////////////////////////////////////////////////////////////////
+// driver
+////////////////////////////////////////////////////////////////////////
 class Driver extends uvm_driver #(Reg_item);
+// class를 factory에 등록한다
   `uvm_component_utils(Driver)
 
+// class object를 생성한다
+// parent class 변수를 초기화 한다
   function new(string name = "Driver", uvm_component parent=null);
     super.new(name, parent);
   endfunction
 
+// virtual interface handling
   virtual reg_if vif;
 
+// build phase
+// configuration database에 있는 virtual interface인 reg_if 를 가져온다
+// 못 가져오면 fatal error
   virtual function void build_phase(uvm_phase phase);
     super.build_phase(phase);
     if(!uvm_config_db#(virtual reg_if)::get(this, "", "reg_vif", vif)) begin      //uvm_config_db is static. always using '::'\
@@ -74,51 +114,90 @@ class Driver extends uvm_driver #(Reg_item);
     end
   endfunction
 
+// run phase
   virtual task run_phase(uvm_phase phase);
+  // [Q] uvm_driver 안에 run_phase가 없는데 super.run_phase를 하는 이유는?
+  // 없어도 차이 없음
     super.run_phase(phase);
     forever begin
       Reg_item m_item;
       `uvm_info("DRV", $sformatf("wait for item from sequencer"), UVM_LOW)
+      // sequence로 부터 transaction을 기다림
       seq_item_port.get_next_item(m_item);
+      // sequence로 부터 finish_item을 받으면 drive_item을 시작함
       drive_item(m_item);
-      seq_item_port.item_done();
+      // driving 후 sequence에게 response를 보냄
+      seq_item_port.item_done()냄
     end
   endtask
 
+// driving to DUT
   virtual task drive_item(Reg_item m_item);
     vif.sel		<= 1;
-    vif.addr		<= m_item.addr;
+    vif.addr	<= m_item.addr;
     vif.wr		<= m_item.wr;
-    vif.wdata		<= m_item.wdata;
+    vif.wdata	<= m_item.wdata;
     @(posedge vif.clk);
     while (!vif.ready) begin
       `uvm_info("DRV", "Wait until ready is high", UVM_LOW)
       @(posedge vif.clk);
     end    
-    vif.sel			<= 0;
+    vif.sel		<= 0;
   endtask
 
 endclass
 
+/////////////////////////////////////////////////////////////////////////////////////////////
+// monitor
+// A UVM monitor is reponsible for capturing signal activity from the design interface
+// and translate it into transaction level data objects that can be sent to other components
+// design interface로 부터 signal을 캡쳐하고 그것을 transaction level data objects로 변환한다
+/////////////////////////////////////////////////////////////////////////////////////////////
 class Monitor extends uvm_monitor;
+// class를 factory에 등록함
   `uvm_component_utils(Monitor)
+
+// class object를 생성한다
+// parent class 변수를 초기화 한다
   function new(string name = "Monitor", uvm_component parent=null);
     super.new(name, parent);
   endfunction
-  
+
+// uvm_analysis_port는 uvm_analysis_imp를 수행하기 위해 모든 scoreboard에게 value를 알려줌
   uvm_analysis_port #(Reg_item) mon_analysis_port;
-  
+
+ // A virtual interface handle to the actual interface that this monitor is trying to monitor
   virtual reg_if vif;
-  
+
+  // Semaphore is a SystemVerilog built-in class, used for access control to shared resources, and for basic synchronization.
+  // A semaphore is like a bucket with the number of keys.
+  // processes using semaphores must first procure a key from the bucket before they can continue to execute, 
+  // All other processes must wait until a sufficient number of keys are returned to the bucket.
+  // Imagine a situation where two processes try to access a shared memory area. 
+  // where one process tries to write and the other process is trying to read the same memory location. 
+  // this leads to an unexpected result. A semaphore can be used to overcome this situation.
+  //
+  // Semaphore is a built-in class that provides the following methods,
+  // new(); <- Create a semaphore with a specified number of keys
+  // get(); <- Obtain one or more keys from the bucket
+  // put(); <- Return one or more keys into the bucket
+  // try_get(); <- Try to obtain one or more keys without blocking
   semaphore sema4;
-  
+
+  // configuration database에 저장된 virtual interface를 가져온다 
   virtual function void build_phase(uvm_phase phase);
     super.build_phase(phase);
     if(!uvm_config_db#(virtual reg_if)::get(this, "", "reg_vif", vif)) begin
       `uvm_fatal("MON", "Could not get vif")
     end
+
+    // the new method will create the semaphore with number_of_keys keys in a bucket; where number_of_keys is integer variable.
+    // the default number of keys is ‘0’
+    // the new() method will return the semaphore handle or null if the semaphore cannot be created
     sema4 = new(1);
+
     mon_analysis_port = new("mon_analysis_port", this);
+
   endfunction
   
   virtual task run_phase(uvm_phase phase);
@@ -128,8 +207,8 @@ class Monitor extends uvm_monitor;
       @(posedge vif.clk);
       if(vif.sel) begin
         Reg_item item = new;
-        item.addr = vif.addr;
-        item.wr = vif.wr;
+        item.addr  = vif.addr;
+        item.wr    = vif.wr;
         item.wdata = vif.wdata;
         
         if(!vif.wr) begin
@@ -143,6 +222,9 @@ class Monitor extends uvm_monitor;
   endtask
 endclass
 
+////////////////////////////////////////////////////////////////////////
+// agent
+////////////////////////////////////////////////////////////////////////
 class agent extends uvm_agent;
   `uvm_component_utils(agent)
   function new(string name = "agent", uvm_component parent = null);
@@ -168,6 +250,9 @@ class agent extends uvm_agent;
   
 endclass
 
+////////////////////////////////////////////////////////////////////////
+// scoreboard
+////////////////////////////////////////////////////////////////////////
 class scoreboard extends uvm_scoreboard;
   `uvm_component_utils(scoreboard)
   function new(string name = "scoreboard", uvm_component parent = null);
@@ -213,6 +298,9 @@ class scoreboard extends uvm_scoreboard;
   endfunction
 endclass
 
+////////////////////////////////////////////////////////////////////////
+// uvm_env
+////////////////////////////////////////////////////////////////////////
 class Env extends uvm_env;
   `uvm_component_utils(Env)
   function new(string name = "Env", uvm_component parent=null);
@@ -235,6 +323,9 @@ class Env extends uvm_env;
 endclass
 
 
+////////////////////////////////////////////////////////////////////////
+// uvm_test
+////////////////////////////////////////////////////////////////////////
 class test extends uvm_test;
   `uvm_component_utils(test)
   function new(string name = "test", uvm_component parent = null);
