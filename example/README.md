@@ -17,5 +17,6 @@
 ![image](https://user-images.githubusercontent.com/12408453/150977315-e4c6eb8b-5676-4baa-af42-28c1a93b635a.png)
 
 ## 예제 UVCs Block Diagram
-![image](https://user-images.githubusercontent.com/12408453/150984406-2883f3d5-771b-43fe-9559-b5f499bda0d7.png)
+![image](https://user-images.githubusercontent.com/12408453/150985558-eb24c31c-7454-4093-8895-d256e6eca47d.png)
+
 
