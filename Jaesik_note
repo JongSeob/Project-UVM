@@ -6,3 +6,24 @@ part 2 에서 드라이버는 그저 같은 행동을 반복하고 있으며 이
 part 3 에서 Driver 는 어케 sequence item 의 8조각 중 1 조각을 아는가 -> item_done 을 통해 알려주기 때문임!
 
 
+part 4 - part 3 의 agent { driver, sequencer } 에서 진화
+top {
+  interface
+  test {
+    uvm_sequence_item
+    env {
+      agent { 
+        driver, 
+        sequencer, 
+        monitor
+       }
+      scoreboard
+    }
+  }
+}
+uvm_sequence_item 은 1개 패킷으로 보면 됨. 이것을 randomize 하고 loop 에 넣어서 여러번 call 하면 당연히 여러개의 패킷으로 쓸 수도 있음.
+꼭 모든 uvm class 들이 Factory 에 등록되는 것은 아님. (uvm_analysis_imp 라던가 이런건 Factory 에 등록하지 않음)
+uvm_analysis_imp 가 monitor 안에 없으면 monitor -> scoreboard 간 데이터 전송이 불가능. 
+* 보통 Bus protocol 체크는 monitor 에서 하고 user 가 원하는 데이터가 맞는지 check 는 scoreboard 에서 함.
+
+
