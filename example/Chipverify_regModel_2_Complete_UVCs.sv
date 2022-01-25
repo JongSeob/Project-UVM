@@ -428,6 +428,10 @@ class reg_rw_test extends base_test;
         super.new (name, parent);
     endfunction
 
+    virtual function void end_of_elaboration_phase(uvm_phase phase);
+        uvm_root::get().print_topology();
+    endfunction
+  
     // Note that main_phase comes after reset_phase, and is performed when
     // DUT is out of reset. "reset_phase" is already defined in base_test
     // and is always called when this test is started
