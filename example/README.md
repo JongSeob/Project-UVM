@@ -14,7 +14,8 @@
 
 **파란색 = uvm basic class**
 **주황색 = Register Abstract Layer 관련 Clas**
-![image](https://user-images.githubusercontent.com/12408453/150977315-e4c6eb8b-5676-4baa-af42-28c1a93b635a.png)
+![image](https://user-images.githubusercontent.com/12408453/150986090-d6cb7513-77fd-4297-901f-844331a6ae03.png)
+
 
 ## 예제 UVCs Block Diagram
 ![image](https://user-images.githubusercontent.com/12408453/150985558-eb24c31c-7454-4093-8895-d256e6eca47d.png)
