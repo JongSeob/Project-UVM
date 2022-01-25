@@ -33,9 +33,9 @@ module traffic (  input          pclk,
         if (presetn & psel & penable) 
             if (pwrite) 
                 case (paddr)
-                    'h0    : ctl_reg <= pwdata;
-                    'h4    : timer_0 <= pwdata;
-                    'h8    : timer_1 <= pwdata;
+                    'h0    : ctl_reg  <= pwdata;
+                    'h4    : timer_0  <= pwdata;
+                    'h8    : timer_1  <= pwdata;
                     'hc    : stat_reg <= pwdata;
                 endcase
     end

@@ -37,16 +37,17 @@ class ral_cfg_ctl extends uvm_reg;
 
     // Build all register field objects
     virtual function void build();
-        this.mod_en      = uvm_reg_field::type_id::create("mod_en",,    get_full_name());
-        this.bl_yellow  = uvm_reg_field::type_id::create("bl_yellow",,get_full_name());
-        this.bl_red      = uvm_reg_field::type_id::create("bl_red",,    get_full_name());
-        this.profile     = uvm_reg_field::type_id::create("profile",,  get_full_name());
+        //                                              "name"      , parent, context
+        this.mod_en    = uvm_reg_field::type_id::create("mod_en"    ,       , get_full_name());
+        this.bl_yellow = uvm_reg_field::type_id::create("bl_yellow" ,       , get_full_name());
+        this.bl_red    = uvm_reg_field::type_id::create("bl_red"    ,       , get_full_name());
+        this.profile   = uvm_reg_field::type_id::create("profile"   ,       , get_full_name());
 
         // configure(parent, size, lsb_pos, access, volatile, reset, has_reset, is_rand, individually_accessible); 
-        this.mod_en.configure(this, 1, 0, "RW", 0, 1'h0, 1, 0, 0);
-        this.bl_yellow.configure(this, 1, 1, "RW", 0, 1'h0, 1, 0, 0);
-        this.bl_red.configure(this, 1, 2, "RW", 0, 1'h0, 1, 0, 0);
-        this.profile.configure(this, 1, 3, "RW", 0, 1'h0, 1, 0, 0);
+        this.mod_en.configure    ( this, 1, 0, "RW", 0, 1'h0, 1, 0, 0 );
+        this.bl_yellow.configure ( this, 1, 1, "RW", 0, 1'h0, 1, 0, 0 );
+        this.bl_red.configure    ( this, 1, 2, "RW", 0, 1'h0, 1, 0, 0 );
+        this.profile.configure   ( this, 1, 3, "RW", 0, 1'h0, 1, 0, 0 );
     endfunction
 endclass 
 
@@ -241,11 +242,11 @@ class my_driver extends uvm_driver #(bus_pkt);
     virtual task run_phase (uvm_phase phase);
         bit [31:0] data;
 
-        vif.psel <= 0;
+        vif.psel    <= 0;
         vif.penable <= 0;
-        vif.pwrite <= 0;
-        vif.paddr <= 0;
-        vif.pwdata <= 0;
+        vif.pwrite  <= 0;
+        vif.paddr   <= 0;
+        vif.pwdata  <= 0;
         forever begin
             seq_item_port.get_next_item (pkt);
             if (pkt.write)
@@ -273,14 +274,14 @@ class my_driver extends uvm_driver #(bus_pkt);
 
     virtual task write ( input bit [31:0] addr,
                          input bit [31:0] data);
-        vif.paddr <= addr;
-        vif.pwdata <= data;
-        vif.pwrite <= 1;
-        vif.psel <= 1;
+        vif.paddr   <= addr;
+        vif.pwdata  <= data;
+        vif.pwrite  <= 1;
+        vif.psel    <= 1;
         @(posedge vif.pclk);
         vif.penable <= 1;
         @(posedge vif.pclk);
-        vif.psel <= 0;
+        vif.psel    <= 0;
         vif.penable <= 0;
     endtask
 endclass
@@ -409,7 +410,7 @@ class base_test extends uvm_test;
     // Build the testbench environment, and reset sequence
     virtual function void build_phase (uvm_phase phase);
         super.build_phase (phase);
-        m_env = my_env::type_id::create ("m_env", this);
+        m_env       = my_env::type_id::create ("m_env", this);
         m_reset_seq = reset_seq::type_id::create ("m_reset_seq", this);
     endfunction
  
