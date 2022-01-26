@@ -32,7 +32,15 @@ class ral_cfg_ctl extends uvm_reg;
     `uvm_object_utils(ral_cfg_ctl)
 
     function new(string name = "traffic_cfg_ctrl");
+        // Check if all of the specified coverage model must be built !! (보통 다른 class와 다름)
+        //  register 이름 / register 크기 / coverage model 종류
         super.new(name, 32, build_coverage(UVM_NO_COVERAGE));
+        // coverage model 종류
+        // UVM_NO_COVERAGE      None
+        // UVM_CVR_REG_BITS     Individual register bits
+        // UVM_CVR_ADDR_MAP     Individual register and memory addresses
+        // UVM_CVR_FIELD_VALS	Field values
+        // UVM_CVR_ALL          All coverage models
     endfunction: new
 
     // Build all register field objects
@@ -42,6 +50,7 @@ class ral_cfg_ctl extends uvm_reg;
         this.bl_yellow = uvm_reg_field::type_id::create("bl_yellow" ,       , get_full_name());
         this.bl_red    = uvm_reg_field::type_id::create("bl_red"    ,       , get_full_name());
         this.profile   = uvm_reg_field::type_id::create("profile"   ,       , get_full_name());
+        // [Q] this.profile   = uvm_reg_field::type_id::create("profile"); 로 해도 되는데 뒤에 get_full_name은 왜 있는건지?
 
         // configure(parent, size, lsb_pos, access, volatile, reset, has_reset, is_rand, individually_accessible); 
         this.mod_en.configure    ( this, 1, 0, "RW", 0, 1'h0, 1, 0, 0 );
