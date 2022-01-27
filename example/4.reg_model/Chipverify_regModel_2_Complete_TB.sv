@@ -14,14 +14,6 @@ module tb;
     bit pclk;
     always #5 pclk = ~pclk;
 
-    wire         w_presetn;
-    wire [31:0]  w_paddr;
-    wire [31:0]  w_pwdata;
-    wire         w_psel;
-    wire         w_pwrite;
-    wire         w_penable;
-    wire [31:0]  w_prdata;
-
     traffic dut(
         .pclk    ( pclk                ),
         .presetn ( bus_if_inst.presetn ),
