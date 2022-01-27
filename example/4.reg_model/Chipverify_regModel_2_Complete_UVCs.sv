@@ -109,24 +109,25 @@ class ral_block_traffic_cfg extends uvm_reg_block;
 
     virtual function void build();
         this.default_map = create_map("", 0, 4, UVM_LITTLE_ENDIAN, 0);
+
         this.ctrl = ral_cfg_ctl::type_id::create("ctrl",,get_full_name());
-        this.ctrl.configure(this, null, "");
+        //                  blk_parent , regfile_parent , hdl_path
+        this.ctrl.configure(this       , null           , "ctl_reg");
         this.ctrl.build();
         this.default_map.add_reg(this.ctrl, `UVM_REG_ADDR_WIDTH'h0, "RW", 0);
-        
-         
+
         this.timer[0] = ral_cfg_timer::type_id::create("timer[0]",,get_full_name());
-        this.timer[0].configure(this, null, "");
+        this.timer[0].configure(this, null, "timer_0");
         this.timer[0].build();
         this.default_map.add_reg(this.timer[0], `UVM_REG_ADDR_WIDTH'h4, "RW", 0);
         
         this.timer[1] = ral_cfg_timer::type_id::create("timer[1]",,get_full_name());
-        this.timer[1].configure(this, null, "");
+        this.timer[1].configure(this, null, "timer_1");
         this.timer[1].build();
         this.default_map.add_reg(this.timer[1], `UVM_REG_ADDR_WIDTH'h8, "RW", 0);
         
         this.stat = ral_cfg_stat::type_id::create("stat",,get_full_name());
-        this.stat.configure(this, null, "");
+        this.stat.configure(this, null, "stat_reg");
         this.stat.build();
         this.default_map.add_reg(this.stat, `UVM_REG_ADDR_WIDTH'hc, "RO", 0);
     endfunction 
@@ -144,9 +145,12 @@ class ral_sys_traffic extends uvm_reg_block;
     function void build();
         this.default_map = create_map("", 0, 4, UVM_LITTLE_ENDIAN, 0);
         this.cfg = ral_block_traffic_cfg::type_id::create("cfg",,get_full_name());
-        this.cfg.configure(this, "tb_top.pB0");
+        //                 parent , hdl_pat h
+        this.cfg.configure(this   , "tb.dut");
         this.cfg.build();
         this.default_map.add_submap(this.cfg.default_map, `UVM_REG_ADDR_WIDTH'h0);
+
+        add_hdl_path("");
     endfunction
 endclass
 
@@ -477,6 +481,9 @@ class reg_rw_test extends base_test;
 
         // Attempt to write into a RO register "stat" with some value
         m_ral_model.cfg.stat.write(status, 32'h12345678);
+
+        // Attempt to write into "ctrl" register with UVM_BACKDOOR option
+        m_ral_model.cfg.ctrl.write(status, 4'hF, UVM_BACKDOOR);
         phase.drop_objection(this);
     endtask
 
