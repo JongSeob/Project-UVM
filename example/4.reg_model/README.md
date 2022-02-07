@@ -20,6 +20,4 @@
 ## 예제 UVCs Block Diagram
 * 박스 안에 표시된 이름은 Class Name
 * Class Name 뒤에 (uvm_reg or uvm_reg_block) 추가한 것은 부모클래스를 표시한 것
-![image](https://user-images.githubusercontent.com/12408453/150985558-eb24c31c-7454-4093-8895-d256e6eca47d.png)
-
-
+![image](https://user-images.githubusercontent.com/12408453/152801354-5ab39eb1-7cf7-401d-8ab9-7f30444031e3.png)
