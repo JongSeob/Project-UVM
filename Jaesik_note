@@ -27,3 +27,49 @@ uvm_analysis_imp 가 monitor 안에 없으면 monitor -> scoreboard 간 데이�
 * 보통 Bus protocol 체크는 monitor 에서 하고 user 가 원하는 데이터가 맞는지 check 는 scoreboard 에서 함.
 
 
+
+part 5 - register layer
+top {
+  interface
+  test {
+    env {
+    ...
+      agent {
+      
+      }
+      reg_env{
+        adapter,
+        predictor,
+        
+        reg_blk {
+        
+          default_map
+          
+          reg_blk {
+          
+            default_map
+            
+            uvm_reg { field_0, field_1, field_2..., default_map }
+            uvm_reg { field_0, field_1, field_2..., default_map }
+            uvm_reg { field_0, field_1, field_2..., default_map }
+          }
+        }
+      }
+    }
+
+  }
+}
+
+상위 reg_blk 에서 하위 reg_blk, uvm_reg 부를때 : configure, default map 설정해야함.
+reg_blk 마다 default_map 이 있음.
+** 이건 register layer 내용은 아닌데, creat( (1), (2), (3) ) 인자에서 2번 인자에 null 이면 component 로 엮지 않고 독자적인 길을 가겠다는 의미. **
+my_env 내 monitor 는 dut 의 register 를 모니터링하며 해당 정보를 uvm_reg_predictor 로 전송함. uvm_reg_predictor 는 uvm_reg_blk 내 register 에 값을 dut 와 일치하도록 업데이트함.
+이때, 중요한건 my_env 를 통해서 register 를 업데이트 했어야한다는 사실임. 그렇지 않으면 monitor 가 정상적으로 동작하지 못해 register layer 가 업데이트 될 수 없음.
+adapter: uvm reg 도 일종의 sequence 와 역할이 같다 볼 수 있음. (frontdoor 이용시). 그래서 sequencer 입장에선, 지금 들어오는 패킷이 register layer 에서 오는지, sequence 에서 오는지
+         구분하고 싶지 않음. 그저 sequence item 을 driver 에게 전달해주는 기계적인 일만 하고픔. 따라서 register layer 에서 adapter 를 만들어 이를 sequence item 패킷화 함.
+         이때 일반적으로 adapter 의 종류가 reg2apb , reg2ahb 등등이 되는 것임.
+backdoor : dut register path 를 다이렉트로 꽂아서 알려주는 것임. configure 할때 넣어주거나 add_hdl_path 를 통해 알려줄 수 있음. 잘 안쓰는데, 그 이유는 유연성이 없기 때문임.
+           dut 가 변경되어 혹시 path 가 변경되면 그때마다 register layer 를 수정해야하는 상황이 생김.
+           
+           
+
