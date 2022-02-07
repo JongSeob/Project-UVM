@@ -12,8 +12,9 @@
 
 ## 예제 UML Class Diagram
 
-**파란색 = uvm basic class**\
-**주황색 = Register Abstract Layer 관련 Class**
+**파란색 배경 = uvm basic class**\
+**주황색 배경 = Register Abstract Layer 관련 Class**\
+**하얀색 배경 = apb agent 관련 Class**
 ![image](https://user-images.githubusercontent.com/12408453/150986090-d6cb7513-77fd-4297-901f-844331a6ae03.png)
 
 
