@@ -1,0 +1,33 @@
+    // register addresses
+    parameter 
+
+RBR_THR_DLL (3'h0)
+
+IER_DLM (3'h1) (IER : interrupt enable register)
+IER[0] - Received data available
+IER[1] - Transmitter holding register empty
+IER[2] - Receiver line status interrupt on: Overrun error, parity error, framing error or break interrupt
+
+IIR_FCR (3'h2) (IIR : interrupt identification register, RO)
+IIR[0] - Received data available
+IIR[1] - Transmitter holding register empty
+IIR[2] - Receiver line status interrupt on: Overrun error, parity error, framing error or break interrupt
+
+LCR (3'h3) (Line Control Register)
+[1:0] - bits
+[2] - stop bits
+[3] - parity en
+
+MCR (3'h4)
+
+LSR (3'h5) (Line Status Register)
+
+MSR (3'h6)
+
+SCR (3'h7)
+
+
+* tx, rx 는 항상 켜져있다.
+* DLM, DLL로 baudrate 를 결정한다. 그냥 default로 써도 될 듯.
+
+
