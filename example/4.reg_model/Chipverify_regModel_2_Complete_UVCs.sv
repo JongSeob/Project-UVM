@@ -194,7 +194,6 @@ class reg_env extends uvm_env;
     ral_sys_traffic                 m_ral_model;         // Register Model
     reg2apb_adapter                 m_reg2apb;           // Convert Reg Tx <-> Bus-type packets
     uvm_reg_predictor #(bus_pkt)    m_apb2reg_predictor; // Map APB tx to register in model
-    my_agent                        m_agent;             // Agent to drive/monitor transactions
 
     virtual function void build_phase (uvm_phase phase);
         super.build_phase (phase);
