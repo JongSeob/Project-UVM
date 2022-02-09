@@ -1,30 +1,42 @@
-    // register addresses
-    parameter 
+[UART register map]
 
-RBR_THR_DLL (3'h0)
+(3'h0) RBR_THR_DLL
+    LCR[7] bit가 1일 때
+DLL[7:0]
+    LCR[7] bit가 0일 때
+THR[7:0] - tx data (W)
+RBR[7:0] - rx data (R)
 
-IER_DLM (3'h1) (IER : interrupt enable register)
+(3'h1) IER_DLM (IER : interrupt enable register)
+    LCR[7] bit가 1일 때
+DLM[7:0] - baud rate
+    LCR[7] bit가 0일 때
 IER[0] - Received data available
 IER[1] - Transmitter holding register empty
 IER[2] - Receiver line status interrupt on: Overrun error, parity error, framing error or break interrupt
 
-IIR_FCR (3'h2) (IIR : interrupt identification register, RO)
+(3'h2) IIR_FCR (IIR : interrupt identification register, RO) (FCR : fifo control register, WO)
 IIR[0] - Received data available
 IIR[1] - Transmitter holding register empty
 IIR[2] - Receiver line status interrupt on: Overrun error, parity error, framing error or break interrupt
+FCR[0] - rx fifo clear
+FCR[1] - tx fifo clear
+FCR[7:6] - trigger level
 
-LCR (3'h3) (Line Control Register)
+
+(3'h3) LCR (Line Control Register)
 [1:0] - bits
 [2] - stop bits
 [3] - parity en
+[7] - DLL, DLM
 
-MCR (3'h4)
+(3'h4) MCR 
 
-LSR (3'h5) (Line Status Register)
+(3'h5) LSR (Line Status Register, RO)
 
-MSR (3'h6)
+(3'h6) MSR
 
-SCR (3'h7)
+(3'h7) MCR
 
 
 * tx, rx 는 항상 켜져있다.
