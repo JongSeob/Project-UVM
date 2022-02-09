@@ -26,7 +26,7 @@ class apb_seq_item extends uvm_sequence_item;
         super.new (name);
     endfunction
     
-    constraint c_addr { addr[1:0] == 2'b00 }
+    constraint c_addr { addr[1:0] == 2'b00; }
 endclass
   
 // Drives a given apb transaction packet to the APB interface

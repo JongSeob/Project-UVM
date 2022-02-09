@@ -20,4 +20,4 @@ interface apb_if (input pclk);
     );
 endinterface
 
-`endif
+`endif // APB_IF_SV
