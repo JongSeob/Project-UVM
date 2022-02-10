@@ -12,7 +12,7 @@ interface apb_if (input pclk);
 
     modport MST (
         input  prdata,
-        output paddr, pwdata, pwrite, psel, penable, presetn, 
+        output paddr, pwdata, pwrite, psel, penable, presetn
     );
     modport SLV (
         input  paddr, pwdata, pwrite, psel, penable, presetn,
