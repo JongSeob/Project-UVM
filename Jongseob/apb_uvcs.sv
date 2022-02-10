@@ -126,6 +126,7 @@ class apb_monitor extends uvm_monitor;
                         else
                             pkt.data = vif.prdata;
                         pkt.write = vif.pwrite;
+                        `uvm_info(get_type_name(), $sformatf("pkt.addr = 0x%h, pkt.data = 0x%h, pkt.write = %0d", pkt.addr, pkt.data, pkt.write), UVM_LOW)
                         mon_ap.write (pkt);
                     end 
                 end

@@ -49,7 +49,19 @@ class reg_env extends uvm_env;
         super.connect_phase (phase);
         m_apb2reg_predictor.map     = m_ral_model.default_map;
         m_apb2reg_predictor.adapter = m_reg2apb;
-    endfunction    
+    endfunction
+  
+    virtual task reset_phase (uvm_phase phase);
+        uvm_reg regs[$];
+      
+        super.reset_phase (phase);
+      
+        m_ral_model.get_registers(regs);
+      
+        foreach (regs[i]) begin
+            regs[i].reset();
+        end
+    endtask
 endclass: reg_env
 
 // The register block is placed in the top level model class definition
@@ -97,9 +109,9 @@ class ral_temp_reg extends uvm_reg;
         this.data_16 = uvm_reg_field::type_id::create("data_16", ,get_full_name());
 
         // configure(parent, size, lsb_pos, access, volatile, reset, has_reset, is_rand, individually_accessible); 
-        this.data_32.configure(this, 32,  0, "RW", 0, 32'hCAFE1234, 1, 0, 1);
+        this.data_32.configure(this, 32,  0, "RW", 0, 32'h2222_3333, 1, 0, 1);
 
-        this.data_16.configure(this, 16, 32, "RW", 0, 16'hFFFF    , 1, 0, 1);
+        this.data_16.configure(this, 16, 32, "RW", 0, 16'h1111     , 1, 0, 1);
     endfunction
 endclass
   
@@ -243,12 +255,16 @@ class predictor_collision_test extends base_test;
       
         `uvm_info(get_type_name(), $sformatf("default_map's n_bytes = %0d", m_ral_model.default_map.get_n_bytes()), UVM_LOW)
         `uvm_info(get_type_name(), $sformatf("default_map's address unit bytes = %0d", m_ral_model.default_map.get_addr_unit_bytes()), UVM_LOW)
+      
+        `uvm_info(get_type_name(), $sformatf("initial mirrored value = 0x%h", m_ral_model.temp_reg.get_mirrored_value()), UVM_LOW)
+        `uvm_info(get_type_name(), $sformatf("initial data_32's desired value = 0x%h", m_ral_model.temp_reg.get("data_32")), UVM_LOW)
+        `uvm_info(get_type_name(), $sformatf("initial data_16's desired value = 0x%h", m_ral_model.temp_reg.get("data_16")), UVM_LOW)
 
         m_apb_wr_seq.addr = 32'h0;
         m_apb_wr_seq.data = 32'hAAAA_BBBB;
         m_apb_wr_seq.start(m_apg_agent1.m_seqr);
-
-        m_ral_model.temp_reg.write (status, 48'h1234_5678_9abc);
+        $display("-------------------------------------------------------------------------------------------------------");
+        m_ral_model.temp_reg.write (status, 48'h1234_5678_9ab);
       
         phase.drop_objection(this);
     endtask
