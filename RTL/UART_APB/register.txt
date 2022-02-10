@@ -36,7 +36,7 @@ FCR[7:6] - trigger level
 
 (3'h6) MSR
 
-(3'h7) MCR
+(3'h7) SCR
 
 
 * tx, rx 는 항상 켜져있다.
