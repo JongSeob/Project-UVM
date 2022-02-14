@@ -1,11 +1,23 @@
-`ifndef UART_UVC_SV
-`define UART_UVC_SV
 
-`include "uvm_macro.svh"
+`include "uvm_macros.svh"
+
+package my_pkg;
 
 import uvm_pkg::*;
 
-typedef class scr;
+typedef class bus_pkt;
+typedef class cfg_lcr;
+typedef class block_cfg;
+typedef class reg_model;
+typedef class reg2apb_adapter;
+typedef class reg_env;
+typedef class my_driver;
+typedef class my_monitor;
+typedef class my_agent;
+typedef class my_env;
+typedef class reset_seq;
+typedef class base_test;
+typedef class reg_rw_access_test;
 
 // register address
 // RBR = 3'h0, THR = 3'h0, DLL = 3'h0, IER = 3'h1, DLM = 3'h1, IIR = 3'h2,
@@ -48,7 +60,7 @@ class cfg_lcr extends uvm_reg;
         this.parity_en = uvm_reg_field::type_id::create("parity_en", , get_full_name());
         this.dll = uvm_reg_field::type_id::create("dll", , get_full_name());
 
-        //        configure (parent, size, lsb_pos, access, volatile, reset, has_reset, is_rand, individually_accessible); 
+        // configure (parent, size, lsb_pos, access, volatile, reset, has_reset, is_rand, individually_accessible); 
         this.bits.configure      (this, 2, 0, "RW", 0, 2'h0, 1, 0, 1);
         this.stop_bits.configure (this, 1, 2, "RW", 0, 2'h0, 1, 0, 1);
         this.parity_en.configure (this, 1, 3, "RW", 0, 2'h0, 1, 0, 1);
@@ -333,6 +345,144 @@ class my_env extends uvm_env;
         m_agent.m_mon.mon_ap.connect (m_reg_env.m_predictor.bus_in);
         m_reg_env.m_reg_model.default_map.set_sequencer(m_agent.m_seqr, m_reg_env.m_adapter);
     endfunction
-    
 endclass
 
+class reset_seq extends uvm_sequence;
+    `uvm_object_utils (reset_seq)
+    function new (string name = "reset_seq");
+        super.new (name);
+    endfunction
+
+    virtual bus_if vif; 
+
+    task body ();
+        if (!uvm_config_db #(virtual bus_if) :: get (null, "uvm_test_top.*", "bus_if", vif)) 
+            `uvm_fatal ("VIF", "No vif")
+
+        `uvm_info ("RESET", "Running reset ...", UVM_MEDIUM);
+        vif.presetn <= 0;
+        @(posedge vif.pclk) vif.presetn <= 1;
+        @ (posedge vif.pclk);
+    endtask
+endclass
+
+class base_test extends uvm_test;
+    `uvm_component_utils (base_test)
+
+    my_env          m_env;
+    reset_seq       m_reset_seq;
+    uvm_status_e    status;
+
+    function new (string name = "base_test", uvm_component parent);
+        super.new (name, parent);
+    endfunction
+
+    // Build the testbench environment, and reset sequence
+    virtual function void build_phase (uvm_phase phase);
+        super.build_phase (phase);
+        m_env       = my_env::type_id::create ("m_env", this);
+        m_reset_seq = reset_seq::type_id::create ("m_reset_seq", this);
+    endfunction
+ 
+    // In the reset phase, apply reset
+    virtual task reset_phase (uvm_phase phase);
+        super.reset_phase (phase);
+        phase.raise_objection (this);
+        m_reset_seq.start (m_env.m_agent.m_seqr);
+        phase.drop_objection (this);
+    endtask
+endclass
+
+class reg_rw_access_test extends base_test;
+    `uvm_component_utils (reg_rw_test)
+    function new (string name="reg_rw_test", uvm_component parent);
+        super.new (name, parent);
+    endfunction
+
+    virtual function void end_of_elaboration_phase(uvm_phase phase);
+        uvm_root::get().print_topology();
+    endfunction
+
+    // Note that main_phase comes after reset_phase, and is performed when
+    // DUT is out of reset. "reset_phase" is already defined in base_test
+    // and is always called when this test is started
+    virtual task main_phase(uvm_phase phase);
+        reg_model    m_reg_model;
+        uvm_status_e status;
+        int          rdata;
+
+        phase.raise_objection(this);
+
+        m_env.m_reg_env.set_report_verbosity_level (UVM_HIGH);
+
+        // Get register model from config_db
+        uvm_config_db#(reg_model)::get(null, "uvm_test_top", "m_reg_model", m_reg_model);
+
+        m_reg_model.cfg.lcr.write (status, 32'h0000_0011);
+        m_reg_model.cfg.lcr.read  (satus, rdata)
+        //rand uvm_reg_field bits;
+        //rand uvm_reg_field stop_bits;
+        //rand uvm_reg_field parity_en;
+        //rand uvm_reg_field dll; // Divisor Latch Access Bit (DLAB)
+        m_reg_model.cfg.lcr.bits.set(1);
+        m_reg_model.cfg.lcr.bits.stop_bits(1);
+        m_reg_model.cfg.lcr.bits.parity_en(1);
+        m_reg_model.cfg.lcr.bits.dll(1);
+        m_reg_model.cfg.update(status);
+
+        phase.drop_objection(this);
+    endtask
+
+    // Before end of simulation, allow some time for unfinished transactions to
+    // be over
+    virtual task shutdown_phase(uvm_phase phase);
+        super.shutdown_phase(phase);
+        phase.raise_objection(this);
+        #100ns;
+        phase.drop_objection(this);
+    endtask
+endclass
+
+endpackage: my_pkg
+
+module tb;
+    import uvm_pkg::*;
+    import my_pkg::*;
+
+    bit clk;
+
+    initial begin
+        $dumpfile("dump.vcd");
+        $dumpvars(0,tb);
+    end
+
+    always #10 clk = ~clk;
+    reg_if _if (clk);
+
+    apb_uart_sv dut(
+    .CLK     (clk), // input  logic                      
+    .RSTN    (bus_if_inst.rstn   ), // input  logic                      
+    .PADDR   (bus_if_inst.paddr  ), // input  logic [APB_ADDR_WIDTH-1:0] 
+    .PWDATA  (bus_if_inst.pwdata ), // input  logic [31:0] 
+    .PWRITE  (bus_if_inst.pwrite ), // input  logic        
+    .PSEL    (bus_if_inst.psel   ), // input  logic        
+    .PENABLE (bus_if_inst.penable), // input  logic        
+    .PRDATA  (bus_if_inst.prdata ), // output logic [31:0] 
+    .PREADY  (bus_if_inst.pready ), // output logic                      
+    .PSLVERR (bus_if_inst.pslverr), // output logic                      
+               
+    .rx_i    (bus_if_inst.rx),      // input  logic - Receiver input
+    .tx_o    (bus_if_inst.tx),      // output logic - Transmitter output
+            
+    .event_o (bus_if_inst.event)    // output logic - interrupt/event output
+    );
+
+    bus_if bus_if_inst (
+        .CLK (clk)
+    );
+
+    initial begin
+        uvm_config_db #(virtual bus_if)::set(null, "uvm_test_top.*","bus_if",bus_if_inst);
+        run_test("reg_rw_access_test");
+    end
+endmodule
