@@ -15,12 +15,13 @@ class reg_env extends uvm_env;
     virtual function void build_phase (uvm_phase phase);
         super.build_phase (phase);
         m_reg_model      = reg_model::type_id::create ("m_reg_model", this);
-        m_adapter        = reg2apb_adapter::type_id::create ("m_adapter"); // <- ??
+        m_adapter        = reg2apb_adapter::type_id::create ("m_adapter");
         m_predictor      = uvm_reg_predictor #(bus_pkt)::type_id::create ("m_predictor", this);
 
         m_reg_model.build();
         m_reg_model.lock_model();
         uvm_config_db #(reg_model)::set (null, "uvm_test_top", "m_reg_model", m_reg_model);
+      
     endfunction
 
     // defulat_map ->  predictor.map

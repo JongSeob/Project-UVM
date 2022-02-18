@@ -24,9 +24,9 @@ class my_monitor extends uvm_monitor;
                     bus_pkt pkt = bus_pkt::type_id::create ("pkt");
                     pkt.addr = vif.paddr;
                     if (vif.pwrite)
-                        pkt.data = vif.pwdata;
+                        pkt.wdata = vif.pwdata;
                     else
-                        pkt.data = vif.prdata;
+                        pkt.rdata = vif.prdata;
                     pkt.write = vif.pwrite;
                     mon_ap.write (pkt);
                 end 

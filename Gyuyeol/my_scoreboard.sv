@@ -1,4 +1,4 @@
-`include "sequence_item.sv"
+
 
 class my_scoreboard extends uvm_scoreboard;
 
@@ -9,7 +9,7 @@ class my_scoreboard extends uvm_scoreboard;
         super.new(name,parent);
     endfunction:new
 
-    bus_pkt req[$];
+  bus_pkt item[10];
 
     // Declaring port
     uvm_analysis_imp#(bus_pkt,my_scoreboard) m_analysis_imp;
@@ -21,15 +21,15 @@ class my_scoreboard extends uvm_scoreboard;
 
     virtual function write(bus_pkt pkt);
         if(pkt.write) begin
-            if(req[pkt.addr]) = pkt;
-            `uvm_info(get_type_name(), $sformatf("Store addr=0x%0h wr=0x%0h data=0x%0h", pkt.addr, pkt.wr, pkt.wdata), UVM_LOW)
+            item[pkt.addr] = pkt;
+            `uvm_info(get_type_name(), $sformatf("Store addr=0x%0h wr=0x%0h data=0x%0h", pkt.addr, pkt.write, pkt.wdata), UVM_LOW)
         end
         if(!pkt.write) begin
-           if(pkt.data != req[pkt.addr].data) begin 
-              `uvm_error(get_type_name(), $sformatf("addr=0x%0h exp=0x%0h act=0x%0h", pkt.addr, req[item.addr].data, pkt.data))
+           if(pkt.rdata != item[pkt.addr].wdata) begin 
+              `uvm_error(get_type_name(), $sformatf("addr=0x%0h exp=0x%0h act=0x%0h", pkt.addr, item[pkt.addr].wdata, pkt.rdata))
            end
            else begin
-              `uvm_info(get_type_name(), $sformatf("PASS! addr=0x%0h exp=0x%0h act=0x%0h", pkt.addr, req[item.addr].data, pkt.data), UVM_LOW)
+              `uvm_info(get_type_name(), $sformatf("PASS! addr=0x%0h exp=0x%0h act=0x%0h", pkt.addr, item[pkt.addr].wdata, pkt.rdata), UVM_LOW)
            end
         end
     endfunction

@@ -1,4 +1,3 @@
-
 `include "sequence_item.sv"
 
 // Drives a given apb transaction packet to the APB interface
@@ -29,26 +28,13 @@ class my_driver extends uvm_driver #(bus_pkt);
         forever begin
             seq_item_port.get_next_item (pkt);
             if (pkt.write)
-                write (pkt.addr, pkt.data);
+              	write (pkt.addr, pkt.wdata);
             else begin
                 read (pkt.addr, data);
-                pkt.data = data;
+                pkt.rdata = data;
             end
             seq_item_port.item_done ();
         end
-    endtask
-
-    virtual task read (  input bit    [31:0] addr, 
-                         output logic [31:0] data);
-        vif.paddr   <= addr;
-        vif.pwrite  <= 0;
-        vif.psel    <= 1;
-        @(posedge vif.clk);
-        vif.penable <= 1;
-        @(posedge vif.clk);
-        data         = vif.prdata;
-        vif.psel    <= 0;
-        vif.penable <= 0;
     endtask
 
     virtual task write ( input bit [31:0] addr,
@@ -60,6 +46,19 @@ class my_driver extends uvm_driver #(bus_pkt);
         @(posedge vif.clk);
         vif.penable <= 1;
         @(posedge vif.clk);
+        vif.psel    <= 0;
+        vif.penable <= 0;
+    endtask
+      
+    virtual task read (  input bit    [31:0] addr, 
+                         output logic [31:0] data);
+        vif.paddr   <= addr;
+        vif.pwrite  <= 0;
+        vif.psel    <= 1;
+        @(posedge vif.clk);
+        vif.penable <= 1;
+        @(posedge vif.clk);
+        data         = vif.prdata;
         vif.psel    <= 0;
         vif.penable <= 0;
     endtask

@@ -3,7 +3,7 @@ import uvm_pkg::*;
 
 `include "reg_model.sv"
 `include "base_test.sv"
-
+// [Q] import uvm_pkg::*; 또는 include 해당 파일의 조건은?
 class reg_rw_access_test extends base_test;
     `uvm_component_utils (reg_rw_access_test)
     function new (string name="reg_rw_access_test", uvm_component parent);
@@ -28,6 +28,7 @@ class reg_rw_access_test extends base_test;
 
         // Get register model from config_db
         uvm_config_db#(reg_model)::get(null, "uvm_test_top", "m_reg_model", m_reg_model);
+        
 
         // 1. write 'h11
         m_reg_model.cfg.lcr.write (status, 32'h0000_0011);
@@ -36,24 +37,16 @@ class reg_rw_access_test extends base_test;
         m_reg_model.cfg.lcr.read  (status, rdata);
 
         // 3. write 'h8d
-        m_reg_model.cfg.lcr.bits.set(1);
-        m_reg_model.cfg.lcr.stop_bits.set(1);
-        m_reg_model.cfg.lcr.parity_en.set(1);
-        m_reg_model.cfg.lcr.dll.set(1);
-        m_reg_model.cfg.update(status);
+        //m_reg_model.cfg.lcr.bits.set(1);
+        //m_reg_model.cfg.lcr.stop_bits.set(1);
+        //m_reg_model.cfg.lcr.parity_en.set(1);
+        //m_reg_model.cfg.lcr.dll.set(1);
+        //m_reg_model.cfg.update(status);
 
         // 4. read
-        m_reg_model.cfg.lcr.read  (status, rdata);
+        //m_reg_model.cfg.lcr.read  (status, rdata);
 
         phase.drop_objection(this);
     endtask
 
-    // Before end of simulation, allow some time for unfinished transactions to
-    // be over
-    virtual task shutdown_phase(uvm_phase phase);
-        super.shutdown_phase(phase);
-        phase.raise_objection(this);
-        #100ns;
-        phase.drop_objection(this);
-    endtask
 endclass

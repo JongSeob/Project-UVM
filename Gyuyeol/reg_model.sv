@@ -43,7 +43,7 @@ class block_cfg extends uvm_reg_block;
 
         // lcr
         this.lcr = cfg_lcr::type_id::create("lcr",,get_full_name());
-        this.lcr.configure(this , null , "regs_q[3]");
+        this.lcr.configure(this , null , "");
         this.lcr.build();
         this.default_map.add_reg(this.lcr, `UVM_REG_ADDR_WIDTH'h3, "RW", 0);
 

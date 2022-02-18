@@ -22,7 +22,7 @@ class my_agent extends uvm_agent;
 
     virtual function void connect_phase (uvm_phase phase);
         super.connect_phase (phase);
-        // Connect: sequencer -> driver (TLM port)
+        // sequencer -> driver (TLM port)
         m_drvr.seq_item_port.connect (m_seqr.seq_item_export);
     endfunction
 endclass
