@@ -1,0 +1,61 @@
+# Code 설명
+
+https://www.edaplayground.com/x/XQWv
+
+(Q) reg2bus 와 bus2reg 는 정확하게 어디서 사용되는건지?
+(A)
+ 
+**reg_rw_access_test.sv / base_test.sv**
+base_test.sv 를 상속받은 이 class는 main_phase에 시나리오를 작성했다. 
+그 이유는 base_test.sv reser_phase에서 이미 reset을 풀어주기 때문이다.
+reset을 풀어주는 방식은 uvm_sequence를 상속받은 reset_seq class 를 만들고 이 body안에서 dut interface로 reset에  1을 넣어준다.
+그리고 base_test 에서 reser_seq를 호출할때 argument에 sequencer를 지정해준다.
+
+**my_env.sv**
+-구성요소는 my_agent, reg_env, scoreboard
+이 component에 대해 connection을 수행한다
+
+reg_env.adapter → agent.sequencer
+agent.monitor → reg_env.predictor
+agent.monitor → scoreboard
+
+**my_agent.sv**
+-구성요소는 sequencer, driver, monitor
+sequencer-> driver
+
+**my_driver.sv**
+forever 문 안에서 sequencer가 data를 보내는지 기다린다.(get_next_item)
+
+(Q) uvm_sequence에서 start item이 없는데도 잘 수행이 되는 이유?
+(A) 
+(Q) read task에서 dut interface의 rdata를 sequence_item의 rdata에 넣어주는 이유?
+(A) uvm_sequencer → adapter(bus2reg) 과정에서 sequence_item의 rdata 값을 반영시키기 위해
+
+**my_monitor.sv**
+data configuration에 set된 dut interface를 get한후 uvm_sequence_item 형식으로 변환하여 scoreboard에 전달한다. 
+항상 돌아야 하므로 fork-join_none 과 forever문을 사용한다.
+
+**my_scoreboard.sv**
+sequence_item 형태로 data를 받아서 배열에 넣어놓고 data compare
+
+**reg_env.sv**
+reg_model, adapter, predictor로 구성된다.
+(Q) reg_model을 build(), lock_model() 하는 이유?
+(A) 
+reg_rw_access_test.sv에서 reg_model을 get하기 위해
+reg_model을 uvm_test_top 위치에 database configuration에 set한다.
+
+**Don’t be confused**
+### **uvm_top**
+The uvm testbench top different with **`uvm_top`**. 
+The **`uvm_top`** is a global variable that hold the handle of **`uvm_root`** object inside **`uvm_pkg`** (which we import in the uvm testbench top). 
+When we import the uvm package (**`import uvm_pkg::*`**) in the testbench top, then call the **`run_test()`** method, 
+the **`uvm_root`** object is constructed (**`uvm_root`** is a singleton class). Check this code below in the [uvm_root.svh] (http://www.studio-muzzi.com/project/docs/UVMdocs_smu/uvm-1.1d/uvm__root_8svh_source.html)
+
+### **uvm_test_top**
+We have **`uvm_test_top`**. It’s actually the default variable containing the object of uvm test that we discussed above. 
+When the **`run_test()`** is called, 
+the uvm test class (which is passed in as cli argument with **`+UVM_TESTNAME=YOUR_TEST_NAME`**) will be constructed and the handle will be stored in the **`uvm_test_top`** variable. 
+It also is the top hierarchy of our uvm testbench. When running the uvm testbench, we will see testbench hierarchy path like this **`uvm_test_top.env.agent_1.driver_1`**. 
+Check this code below in the [uvm_root.svh](http://www.studio-muzzi.com/project/docs/UVMdocs_smu/uvm-1.1d/uvm__root_8svh_source.html)
+[https://dvtalk.me/2020/08/09/uvm-test-and-testbench-top/](https://dvtalk.me/2020/08/09/uvm-test-and-testbench-top/)
