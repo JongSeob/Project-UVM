@@ -1,6 +1,6 @@
 # 사용 중인 Perl Package 목록
 
-| Package Name      | MetaCPAN Page URL                             | Description                                                               |
+| Package Name      | MetaCPAN Page URL                             | Description from MetaCPAN                                                 |
 |-------------------|-----------------------------------------------|---------------------------------------------------------------------------|
 | FindBin			| https://metacpan.org/pod/FindBin				| Locate directory of original perl script									|
 | Template			| https://metacpan.org/pod/Template				| Front-end module to the Template Toolkit									|
