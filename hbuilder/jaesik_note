@@ -1,0 +1,37 @@
+FindBin : 실행되는 현재 코드의 위치를 따옴.
+
+##################################
+# $home/00_Perl2Py/findbin.pl
+##################################
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+print "$Bin\n"; 
+###################################
+# 결과 : /home/jaesik/00_Perl2Py
+###################################
+
+
+###################################
+# $home/00_Perl2Py/template.pl
+###################################
+다운로드 : $ sudo cpan Template
+예제 : https://www.oreilly.com/library/view/perl-template-toolkit/0596004761/ch01.html
+파일에서 [% 변수명 %] 으로 적혀져있는 템플릿 파일에 변수명 => 값 을 인가할 수 있음.
+(ex) 
+##################################
+# template.tt
+내가 사는 곳은 [% planet %] 이다
+##################################
+# template.pl
+use Template;
+my $tt = Template->new();
+my $input = 'template.tt'
+my $vars = { planet => 'Earth',}; - template.pl
+$tt->process($input, $vars) || die $tt->error();
+#################################
+# 결과 : 
+내가 사는 곳은 Earth 이다
+#################################
+
+
+
