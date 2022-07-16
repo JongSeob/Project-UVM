@@ -78,3 +78,12 @@ sub findfiles { print "$File::Find::name, "; }
 #############################
 
 
+========================================= 6. File::Path =================================================
+디렉토리 만들고 삭제하는거임
+##########################
+# filepath.pl
+#########################
+use File::Path qw(make_path remove_tree);
+@created = make_path('foo/bar/baz');
+make_path('foo/bar/baz'); # 디렉토리 생성!
+$remove_count = remove_tree('foo/bar/baz'); # foo/bar 까지는 살아있고 baz 만 삭제!
