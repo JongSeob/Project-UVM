@@ -48,7 +48,7 @@ template.tt 에서, [% planet = 20 %] 을 미리 지정해두면
 Hi [% INCLUDE bar %] 안녕
 [% BLOCK bar %] Hello [% END %]
 이라하면, Hi 안녕 Hello 가 아니라 Hi Hello 안녕 이 됨.
-(3) IF, ELSIF, ELSE 도 사용가능.
+(3) IF, ELSIF, ELSE 도 사용가능. (그 외 switch case, while, foreach 등등도 마찬가지로 사용가능하다)
 [% IF age < 10 %] Hello [% END %] 이고 age 를 8로 설정하고 process 했다면 Hello 가 출력됨.
 
 
