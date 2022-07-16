@@ -64,3 +64,17 @@ print "I am $name, and". ($employed? '':'un'). "employed.\n";
 # 실행 : perl getopt.pl -name Jaesik -employed
 # 결과 : I am Jaesik, and employed.
 #############################
+
+========================================= 5. File::Find =================================================
+펄 코드가 실행되는 위치에서부터 하위 디렉토리까지 찾음
+##############################
+# filefind.pl
+##############################
+find ( { wanted -> \&findfiles, }, 'template' );
+sub findfiles { print "$File::Find::name, "; }
+#############################
+디렉토리 예시 : template/dummy/template
+결과 : template, template/dummy, template/dummy/template
+#############################
+
+
