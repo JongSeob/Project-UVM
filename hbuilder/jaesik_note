@@ -134,6 +134,30 @@ copy($newfile, $oldfile);
 #######################
 위와 같을때, new.dat 이 $PWD 에 생성되며 내용은 old.dat 과 같음
 ========================================= 8. File::Temp =============================================================
+그냥 파일의 핸들러를 받아오는 거임
+###############################
+# filetemp.pl
+use File::Temp 'tempfile';
+use File::Copy 'move';
+my $file = shift;
+my $old = get_content($file);
+my $new = $old . "ADDED NEW TEXT";
+my ($tempfh, $tempfile) = tempfile;
+print $tempfh $new;
+close $tempfh;
+move $tempfile, $file || die "Can't move";
+sub get_content {
+    my $file = shift;
+    open my $fh, '<', $file || die "Cannot open";
+    my $content = join('', <$fh>);
+    close $fh;
+    return $content;
+}
+################################
+입력 : perl filetemp.pl temp.tt2
+결과 : temp.tt2 의 마지막 줄에 ADDED NEW TEXT 가 찍힘.
+
+
 ========================================= 9. File::Basename =========================================================
 ========================================= 10. IO::File ==============================================================
 ========================================= 11. Cwd ===================================================================
