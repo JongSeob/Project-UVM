@@ -176,6 +176,36 @@ $file = destruction, $dir = foo/bar, $ext = .tt
 ################################
 
 ========================================= 10. IO::File ==============================================================
+파일을 열고 내용을 읽어들이거나 수정하기 위함
+###################################
+# iofile.pl
+use IO::File;
+$fh = IO::File->new();
+if($fh->open("< destruction.tt")){ # destruction.tt 를 읽어들인다.
+    print <$fh>;                   # destruction.tt 의 내용을 출력한다.
+    $fh->close;                    # file 을 닫는다.
+}
+$fh = IO::File->new("> destruction.tt");     # destruction.tt 에 쓸 것이다.
+    print $fh "It is erased by iofile.pl "; # 내용이 써진다.
+    $fh->close;
+}
+$fh = IO::File->new("destruction.tt", "r");    # destruction.tt 를 읽는다.
+if(defined $fh){
+    print <$fh>;
+    undef $fh;
+}
+$fh = IO::File->new("destruction.tt", O_WRONLY|O_APPEND);   # destruction.tt 를 쓸 것이다.
+if(defined $fh){
+    print $fh "Second line added\n";
+    $pos = $fh->getpos;
+    $fh->setops($pos);
+    undef $fh;
+}
+################################
+# 결과
+destruction.tt 의 원래 내용 : Everything is destructed...
+실행 후 destruction.tt 의 : It is erased by iofile.pl Second line added
+################################
 ========================================= 11. Cwd ===================================================================
 ========================================= 12. Pod::Usage ============================================================
 ========================================= 13. IO::Tee ===============================================================
