@@ -283,3 +283,57 @@ $VAR3 = {
 ##########################################
 ========================================= 19. Capture::Tiny =========================================================
 ========================================= 20. Log::Log4perl =========================================================
+
+
+=========================================== jinja2 =======================================
+# template/index.html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Proba<title>
+        <body>
+          <center>
+            <h1>Proba</h1>
+            <p>{{ urls|length }} links</p>
+          </center>
+          <ol align="left">
+            {% set counter = 0 -%}
+            {% for url in urls -%}
+            <li><a href="{{ url }}">{}</a></li>
+            {% set counter = counter + 1 -%}
+            {% endfor -%}
+          </ol>
+        </body>
+</html>
+
+# 0_jinia.py
+from jinja2 import Environment, FileSystemLoader
+import os
+
+PATH = os.path.dirname(os.path.abspath(__file__));
+TEMPLATE_ENVIRONMENT = Environment(
+        autoescape=False,
+        loader=FileSystemLoader(os.path.join(PATH, 'template')),
+        trim_blocks=False)
+
+def render_template(template_filename, context):
+    return TEMPLATE_ENVIRONMENT.get_template(template_filename).render(context)
+
+def create_index_html():
+    fname = "output.html";
+    urls = ['http://example.com/1', 'http://example.com/2', 'http://example.com/3']
+    context = {
+            'urls': urls
+            }
+    with open(fname, 'w') as f:
+        html = render_template('index.html', context)
+        f.write(html)
+
+def main():
+    create_index_html()
+
+if __name__ == "__main__":
+    main()
+    
+    
