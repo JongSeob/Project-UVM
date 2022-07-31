@@ -6,4 +6,12 @@ Template :
 /VERIFICATION
     /tb
     - PROJECT_top.sv.jj2
+    
+
+Output :
+
+/output
+    /VERIFICATION
+        /tb
+        -top.sv
 
