@@ -1,0 +1,9 @@
+input : input.xlsx
+builder : kbuilder.py
+
+Template :
+
+/VERIFICATION
+    /tb
+    - PROJECT_top.sv.jj2
+
