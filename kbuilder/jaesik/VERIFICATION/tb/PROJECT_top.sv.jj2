@@ -1,0 +1,40 @@
+import uvm_pkg::*;
+import my_pkg::*;
+
+{% set filenmae = "{{name}}_agent.svh" %}
+
+class {{name}}_agent extends uvm_agent;
+
+	`uvm_component_utils({{name}}_agent)
+
+	{% if driver == 1 %}
+	{{name}}_drive		m_drv;
+	{% endif %}
+	{% if monitor == 1 %}
+	{{name}}_monitor	m_monitor;
+	{% endif %}
+	{% if seq == 1 %}
+	{{name}}_sequencer	m_seq;
+	{% endif %}
+	
+	function new(string name, uvm_component parent=null);
+		super.new(name, parent);
+	endfunction
+
+	function void build_phase(uvm_phase phase);
+		super.build_phase(phase);
+
+		{% if driver == 1 %}
+		m_driver = m_drv::type_id::create("m_driver", this);
+		{% endif %}
+		{% if monitor == 1 %}
+		m_monitor = m_monitor::type_id::create("m_monitor", this);
+		{% endif %}
+		{% if seq == 1 %}
+		m_seq = m_seq::type_id::create("m_seq", this);
+		{% endif %}
+	endfunction
+
+endclass
+
+	
